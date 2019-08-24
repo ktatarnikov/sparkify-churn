@@ -13219,9 +13219,7 @@ spark.conf.set(&#39;spark.sql.pivotMaxValues&#39;, u&#39;50000&#39;)
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-python2"><pre><span></span># event_data = &quot;s3n://udacity-dsnd/sparkify/mini_sparkify_event_data.json&quot;
-# event_data = &quot;s3n://udacity-dsnd/sparkify/sparkify_event_data.json&quot;
-event_data = &quot;s3n://test-ai-hops/sparkify_event_data.json&quot;
+<div class=" highlight hl-python2"><pre><span></span>event_data = &quot;s3n://udacity-dsnd/sparkify/sparkify_event_data.json&quot;
 raw_dataset = spark.read.json(event_data)
 raw_dataset.head()
 </pre></div>
