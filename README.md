@@ -34,7 +34,8 @@
 
 # Classification Model Selection
 
-  Model selection is done among three algorithms: Decision Tree, Random Forest, Gradient Boosting Tree
+  Model selection is done among three algorithms: Decision Tree, Random Forest, Gradient Boosting Tree.
+
   The results of model selections are the following:
 
     | Classifier             | f1score |
