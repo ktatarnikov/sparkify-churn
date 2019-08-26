@@ -9,16 +9,26 @@
 
 # Problem statement
 
-  For the classification task I take the user activity log and extract a number of relevant features so they potentially can explain the risky category:
-  Further the binary classifier is trained using the extracted features. Three candidate algorithms are evaluated: Decision tree, Random forest and Gradient boosting.
+  The full dataset is big to fit single workstation therefore I split the pipeline into two parts: the goal of the first part is to do model selection - it operates on a small subset of the data and allows fast iteration during data wrangling and features engineering, the goal of the second part is testing and tuning the final model on the full dataset where I use the distributed spark cluster.
 
-  The full dataset contains 12Gb of data and it is too big to wrangle locally, therefore model selection is done on a small subset and then the best model
-  is being evaluated on the full dataset where the final parameter tuning and testing is done.
+  The small dataset pipeline performs the following steps:
+
+  - Loading the dataset
+  - Preprocessing the data: Cleaning the data from NaNs and convert types if necessary
+  - Extracting possible features and verifying if they can explain churn
+  - Feature Engineering: checking feature distributions, assembling the classification dataset
+  - Model selection among three candidates: Decision Tree, Random Forest, Gradient Boosting Tree
+
+  The big dataset pipeline continues where the previous pipeline left off:
+
+  - Executes the code that does feature engineering from the first pipeline and assemble features on the big dataset
+  - Perform model tuning using the best model from the first pipeline
+  - Execute final testing on the big dataset
 
 # Datasets
 
-  - Small dataset is available in the repository (mini_sparkify_event_data.json.zip)
-  - Full dataset (12Gb) available in s3 bucket (s3n://udacity-dsnd/sparkify/sparkify_event_data.json)
+  - Small dataset is available in the repository
+  - Full dataset (12Gb) available from [Udacity](https://www.udacity.com/course/data-scientist-nanodegree--nd025)
 
 # Feature Engineering
 

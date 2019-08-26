@@ -13142,10 +13142,10 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In this article I consider the task of improvement of online music service company.</p>
-<p>The issue the company would like to tackle is to reduce the customer churn or by other words the number of service unsubscriptions.</p>
-<p>The approach is to determine the target group - the customers that are in a risky category and potentially willing to unsubscribe from the service and then giving them incentive to stay, e.g. in the form of discounts or special offers.</p>
-<p>In order to determine the customers under risk I will extract user activity patterns from the service access log and try to classify users into two categories: those who are willing to stay subscribed and those that may unsubscribe soon.</p>
+<p>In this notebook I consider the task of improvement of online music service.</p>
+<p>The issue the company is trying to solve is reducing customer churn or by other words the number of service cancelations.</p>
+<p>The approach is to determine the target group - the customers that are in a risky category and potentially willing to unsubscribe from the service and then to give them an incentive to stay, e.g. in a form of discounts or special offers.</p>
+<p>In order to determine the customers under risk I will extract various user activity features from the service access log and try to classify users into two categories: those who is willing to stay subscribed and those that likely unsubscribe soon.</p>
 
 </div>
 </div>
@@ -13160,7 +13160,22 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>For the classification task I take the user activity log containing the fields below and extract a number of relevant features so they potentially can explain the risky category:</p>
+<p>The full dataset is big to fit single workstation therefore I will split the pipeline into two parts: the goal of the first part is model selection - it will be performed on the small subset of the data and will allow fast iteration during data wrangling and features engineering, the goal of the second part is testing and tuning the final model on the full dataset where I will use the distributed spark cluster.</p>
+<p>The plan for the small dataset pipeline is to perform the following steps:</p>
+<ol>
+<li>Loading the dataset</li>
+<li>Preprocessing the data: Cleaning the data from NaNs and convert types if necessary</li>
+<li>Extracting possible features and verifying if they can explain churn</li>
+<li>Feature Engineering: checking feature distributions, assembling the classification dataset</li>
+<li>Model selection among three candidates: Decision Tree, Random Forest, GradientBoosting Tree</li>
+</ol>
+<p>The plan for the big dataset pipeline is the following:</p>
+<ol>
+<li>Transfer the code that does feature engineering from the first pipeline and assemble features on big dataset.</li>
+<li>Perform model tuning using the best model from the first pipeline</li>
+<li>Execute final testing on the big dataset</li>
+</ol>
+<p>The feature extraction strategy is the following. I will take the user activity log containing the fields below and extract a number of relevant features so they potentially can explain the churn category:</p>
 <ul>
 <li>User identifying information<ul>
 <li>userId</li>
@@ -13190,7 +13205,7 @@ div#notebook {
 </ul>
 </li>
 </ul>
-<p>The features that potentially could explain risky category are:</p>
+<p>The feature candidates that potentially could explain risky category are:</p>
 <ul>
 <li>location</li>
 <li>gender</li>
@@ -13200,9 +13215,6 @@ div#notebook {
 <li>length of listened songs</li>
 <li>time since registration</li>
 </ul>
-<p>Using extracted features I plan to train the binary classifier with the following candidate model types:
-Decision tree classifier, Random forest classifier, Gradient boosting classifier.</p>
-<p>The full dataset contains 12Gb of data which is too a big to wrangle locally, therefore I am planning to perform a model selection on a small dataset first and then transfer the model with best parameters on the full dataset and perform final parameter tuning and testing.</p>
 
 </div>
 </div>
@@ -13217,9 +13229,10 @@ Decision tree classifier, Random forest classifier, Gradient boosting classifier
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>For a model selection on a small dataset I split the sample of data into train and validation sets and perform k-fold cross validation on train set to select the model and then validate the result on the validation set.</p>
+<p>For the model selection on a small dataset I split the sample of data into train and validation sets and perform k-fold cross validation on the train set to select the model and then validate the result on the validation set.</p>
 <p>The selected classifier will be trained on the full dataset with model parameters tuning. The final testing will be done on a test set extracted from full dataset.</p>
-<p>For the model selection I use f1 score as a main metric and precision, recall, accuracy as secondary.</p>
+<p>For the model selection I use f1 score as the evaluation metric. This metric is relevant in this  task because it combines feedback for both false positives and false negatives. In contrast the accuracy may be misleading in case of unbalanced classes where the model can simply favour one of the classes. f1score is important in this task because the churn/no churn classes are not balanced and biased prediction will have impact on the cost of churn prevention campaign therefore it is important to use correct evaluation metric here.</p>
+<p>I will use precision and recall as complementary evaluation metric when f1score is low in order to find out model bias. The correct non biased prediction of churn customer will have impact on the cost of campaign therefore it is important to use correct evaluation metric.</p>
 
 </div>
 </div>
@@ -17269,7 +17282,30 @@ subsamplingRate: 1.0
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="6-Conclusions">6 Conclusions<a class="anchor-link" href="#6-Conclusions">&#182;</a></h1><p>In this notebook I considered the problem of churn classification. The data preprocessing, feature, engineering and model selection has been done on the small sample dataset and then selected model was executed on the full dataset where the model parameters were tuned. The selected model is RandomForestClassifier and the final f1score achieved on the full dataset is 0.81</p>
+<h1 id="6-Conclusions-and-Future-Work">6 Conclusions and Future Work<a class="anchor-link" href="#6-Conclusions-and-Future-Work">&#182;</a></h1><p>In this article I considered the problem of churn classification. The volume of the data did not allow to operate on the full dataset effectively therefore the pipeline has been split into two steps: model selection and model tuning.</p>
+<p>The model selection has been performed on the small subset of data using three candidates: DecisionTree, Random Forest and Gradient Boosting. The best selected model is Random Forest Classifier with the f1score 0.82.</p>
+<p>The model tuning has been performed on the full dataset using AWS spark cluster with the best model from the model selection process. The test score on the full dataset is  0.81.</p>
+<p>It is interesting and in some sense expected that the Gradient Boosting Tree model has overfit on the small subset of data where it reports f1score 1.0 on the training set and 0.71 on the evaluation set. It seems that there are some parameters are set to subnormal values by default therefore I am seeing a lots of improvements here. Some of them are given below:</p>
+<ul>
+<li>Use grid parameter selection for this classifier despite it performed not very well on the evaluation set with focus on max tree depth parameter</li>
+<li>Reduce the number of features by checking which features are correlated</li>
+<li>Increase the number of training samples.</li>
+<li>Apply regularisation </li>
+</ul>
+<p>As expected the data preprocessing and feature engineering took the most of the time since it was required to conduct lots of experiments with feature candidates, therefore certain time and complexity tradeoffs has been made to limit the number of possible features leaving some of the feature not explored and therefore leaving some space for possible improvement. The features that could be further explored are:</p>
+<ul>
+<li>number of thumbs up/down per songs listened per time interval</li>
+<li>number of roll advert per songs listened per time interval</li>
+<li>average number of songs listened per day</li>
+<li>decrease in service interactions over time</li>
+<li>decrease in number of songs listened over time</li>
+</ul>
+<p>In this work certain prediction quality has been achieved on three model types, and it will be beneficial to evaluate other model types available in spark, such as SVM and Logistic Regression, to confirm that the current model is top performer.</p>
+<p>Also as part of future work the pipelines can be productionalized to an application that could perform two tasks: </p>
+<ul>
+<li>periodic assessment of customers and generate report with the customers under risk</li>
+<li>periodic model selection process where the model type and parameters can be automatically selected based on input data. This pipeline could ensure that model performance does not degrade with the time.</li>
+</ul>
 
 </div>
 </div>
